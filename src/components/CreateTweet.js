@@ -6,6 +6,8 @@ import {
   MapPinIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
+import { useSession } from "next-auth/react";
+import axios from "axios";
 
 const icons = [
   {
@@ -24,15 +26,33 @@ const icons = [
 function CreateTweet() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [input, setInput] = useState("");
+  const [image, setImage] = useState("");
+  const { data: session } = useSession();
 
   useEffect(() => {
-    console.log(input);
     if (input.length > 0) {
       setIsSubmitting(true);
     } else {
       setIsSubmitting(false);
     }
   }, [input]);
+
+  const addTweet = async (e) => {
+    e.preventDefault();
+    try {
+      const data = new FormData();
+      data.append("tweet", input);
+      data.append("image", image);
+      data.append("user_id", session?.user?.id);
+      console.log(data);
+      const res = await axios.post("/tweet", data);
+      setInput("");
+      setImage("");
+      console.log(res.data);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
   return (
     <div className="grid grid-cols-8  pt-[110px] pb-4">
@@ -44,7 +64,10 @@ function CreateTweet() {
           />
         </div>
       </div>
-      <div className="col-span-7 flex flex-col mt-4">
+      <form
+        className="col-span-7 flex flex-col mt-4"
+        onSubmit={(e) => addTweet(e)}
+      >
         <div className=" flex items-center gap-1 border border-gray-200 px-3 text-sm font-medium text-blue-400 rounded-full w-fit">
           Everyone <ChevronDownIcon className="h-4 w-4 font-medium" />
         </div>
@@ -59,9 +82,26 @@ function CreateTweet() {
         </div>
         <div className="flex justify-between items-center">
           <div className="flex gap-2 ">
-            {icons.map((icon) => {
-              return <div className="flex items-center gap-1">{icon.icon}</div>;
-            })}
+            <div className="flex items-center gap-1">
+              <div>
+                <label for="image">
+                  <PhotoIcon
+                    className="h-6 w-6 text-blue-500 cursor-pointer"
+                    for="image"
+                  />
+                </label>
+                <input
+                  type="file"
+                  id="image"
+                  className="hidden"
+                  name="image"
+                  onChange={(e) => setImage(e.target.files[0])}
+                />
+              </div>
+              <GifIcon className="h-6 w-6 text-blue-500" />
+              <FaceSmileIcon className="h-6 w-6 text-blue-500" />
+              <MapPinIcon className="h-6 w-6 text-blue-500" />
+            </div>
           </div>
 
           <button
@@ -72,7 +112,7 @@ function CreateTweet() {
             Tweet
           </button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

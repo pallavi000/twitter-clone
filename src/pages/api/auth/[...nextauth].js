@@ -1,39 +1,52 @@
 import NextAuth from "next-auth";
-import GithubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
-
+import User from "../../../../models/User";
+import dbConnect from "../../../../utils/dbConnect";
 export const authOptions = {
   // Configure one or more authentication providers
+  session: {
+    strategy: "jwt",
+  },
   providers: [
-    GithubProvider({
-      clientId: process.env.GITHUB_ID,
-      clientSecret: process.env.GITHUB_SECRET,
-    }),
     CredentialsProvider({
       type: "credentials",
-      credentials: {
-        username: {
-          label: "Username",
-          type: "text",
-          placeholder: "Enter username",
-        },
-        password: {
-          label: "Password",
-          type: "password",
-          placeholder: "Enter Password",
-        },
-      },
+      credentials: {},
       async authorize(credentials, req) {
-        const { username, password } = credentials;
-        if (username === "test@gmail.com" && password === "123456") {
-          return { name: "test", id: 1 };
+        const { email, password } = credentials;
+
+        await dbConnect();
+        const user = await User.findOne({ email: credentials.email });
+        console.log(user, "userrr");
+        if (email == user.email && password == user.password) {
+          console.log(email, password, user._id.toString());
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+          };
         } else {
-          throw new Error("username and password did not match");
+          console.log("error aayo");
+          throw new Error("error");
         }
       },
     }),
-
-    // ...add more providers here
   ],
+
+  callbacks: {
+    async session({ session, token }) {
+      session.user = token.user;
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.user = user;
+      }
+      return token;
+    },
+  },
+
+  pages: {
+    signIn: "/auth/signin",
+  },
 };
 export default NextAuth(authOptions);

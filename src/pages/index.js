@@ -1,5 +1,6 @@
 import CreateTweet from "@/components/CreateTweet";
 import PostComponent from "@/components/PostComponent";
+import SignUp from "@/components/auth/SignUp";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -8,7 +9,7 @@ export default function Home() {
   const posts = [1, 2, 3, 4, 5];
 
   return (
-    <div className="">
+    <div className="relative">
       <div className=" flex justify-center p-4 pb-0 pt-14 bg-white border-b   border-gray-200 fixed w-1/2 border-r ">
         <div className="flex gap-12 justify-between items-center w-1/2">
           <div
